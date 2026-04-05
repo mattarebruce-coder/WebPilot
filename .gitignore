@@ -1,0 +1,15 @@
+# Environment & secrets
+.env
+.env.*
+credentials.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Claude local settings
+.claude/settings.local.json
