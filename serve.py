@@ -118,11 +118,11 @@ CRM_CSP = (
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
     "font-src 'self' https://fonts.gstatic.com; "
     "img-src 'self' data:; "
-    "connect-src 'self' https://*.supabase.co https://*.supabase.in; "
+    "connect-src 'self' https://*.supabase.co https://*.supabase.in https://cdn.jsdelivr.net; "
     "frame-ancestors 'none'; "
     "base-uri 'self'; "
     "object-src 'none'; "
-    "form-action 'none'; "
+    "form-action 'self'; "
     "upgrade-insecure-requests;"
 )
 
