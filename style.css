@@ -113,15 +113,19 @@ ul { list-style: none; }
 
 /* ══ Hero ══ */
 .hero {
-  position: relative; min-height: 100vh;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  text-align: center; padding: 140px 32px 100px;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 140px 32px 100px;
   overflow: hidden;
 }
 
 .hero-meta {
-  display: flex; align-items: center; gap: 16px;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
   margin-bottom: 40px;
 }
 
@@ -142,6 +146,7 @@ ul { list-style: none; }
 }
 
 .hero-title {
+  display: block;
   font-size: clamp(4rem, 12vw, 11rem);
   font-weight: 900; letter-spacing: -0.05em;
   line-height: 0.9; margin-bottom: 32px;
@@ -150,6 +155,7 @@ ul { list-style: none; }
 }
 
 .hero-subtitle {
+  display: block;
   font-size: clamp(1rem, 1.8vw, 1.15rem);
   color: var(--gray-400); max-width: 520px;
   margin: 0 auto 48px; line-height: 1.7; font-weight: 400;
