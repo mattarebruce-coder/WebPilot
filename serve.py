@@ -63,14 +63,18 @@ limiter = RateLimiter(RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_SECONDS)
 
 # ── Allowed static file extensions (whitelist) ──
 ALLOWED_EXTENSIONS = {
-    '.html', '.css', '.js', '.json',
+    '.html', '.css', '.js', '.json', '.sql',
     '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp',
     '.woff', '.woff2', '.ttf', '.eot',
     '.txt', '.xml', '.webmanifest',
 }
 
+# ── CRM pages that need Supabase access (broader CSP) ──
+CRM_PAGES = {'/admin.html', '/status.html'}
+
 # ── Security Headers (OWASP best practices) ──
-SECURITY_HEADERS = {
+# Base headers shared by all pages
+BASE_SECURITY_HEADERS = {
     # Prevent clickjacking
     'X-Frame-Options': 'DENY',
     # Prevent MIME-type sniffing
@@ -81,20 +85,6 @@ SECURITY_HEADERS = {
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     # Permissions policy — disable unnecessary browser features
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
-    # Content Security Policy — restrict resource loading
-    # Allows: self, Google Fonts, Formspree form action, inline styles (for clamp/gradient)
-    'Content-Security-Policy': (
-        "default-src 'self'; "
-        "script-src 'self'; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-        "font-src 'self' https://fonts.gstatic.com; "
-        "img-src 'self' data:; "
-        "form-action https://formspree.io; "
-        "frame-ancestors 'none'; "
-        "base-uri 'self'; "
-        "connect-src 'self' https://formspree.io; "
-        "object-src 'none';"
-    ),
     # Strict Transport Security (effective when served over HTTPS)
     'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
     # Prevent caching of sensitive pages
@@ -102,7 +92,39 @@ SECURITY_HEADERS = {
     # Cross-Origin policies
     'Cross-Origin-Opener-Policy': 'same-origin',
     'Cross-Origin-Resource-Policy': 'same-origin',
+    # Cross-domain policy
+    'X-Permitted-Cross-Domain-Policies': 'none',
 }
+
+# CSP for the main marketing site (strict — no external scripts)
+MAIN_CSP = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data:; "
+    "form-action https://formspree.io; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "connect-src 'self' https://formspree.io; "
+    "object-src 'none'; "
+    "upgrade-insecure-requests;"
+)
+
+# CSP for CRM pages (allows Supabase CDN + API, inline scripts for app logic)
+CRM_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data:; "
+    "connect-src 'self' https://*.supabase.co https://*.supabase.in; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "object-src 'none'; "
+    "form-action 'none'; "
+    "upgrade-insecure-requests;"
+)
 
 
 class SecureHandler(http.server.SimpleHTTPRequestHandler):
@@ -183,9 +205,16 @@ class SecureHandler(http.server.SimpleHTTPRequestHandler):
         self.send_error_response(405, 'Method Not Allowed', 'PATCH is not supported.')
 
     def end_headers(self):
-        """Inject security headers into every response."""
-        for header, value in SECURITY_HEADERS.items():
+        """Inject security headers into every response.
+        Uses page-specific CSP: stricter for main site, broader for CRM pages."""
+        for header, value in BASE_SECURITY_HEADERS.items():
             self.send_header(header, value)
+        # SECURITY: Context-aware CSP — CRM pages need Supabase access
+        decoded_path = unquote(self.path.split('?')[0].split('#')[0])
+        if decoded_path in CRM_PAGES:
+            self.send_header('Content-Security-Policy', CRM_CSP)
+        else:
+            self.send_header('Content-Security-Policy', MAIN_CSP)
         super().end_headers()
 
     def send_error_response(self, code, title, message, extra_headers=None):

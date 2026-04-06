@@ -212,18 +212,52 @@
 
 // ══════════════════════════════════════════════════════════════════════
 //  Supabase Client Initialization
+//
+//  SECURITY NOTE — API Key Handling (OWASP A02:2021)
+//  ──────────────────────────────────────────────────
+//  The key below is the Supabase "anon" (public) key. It is DESIGNED
+//  to be exposed in client-side code — similar to a Firebase apiKey.
+//  It can only perform operations allowed by Row Level Security (RLS)
+//  policies defined in the database schema above.
+//
+//  ⚠ The "service_role" key must NEVER appear in client-side code.
+//    It bypasses RLS and grants full database access.
+//
+//  For production deployments with a build step, inject these values
+//  via environment variables at build time:
+//    VITE_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL
+//    VITE_SUPABASE_KEY / NEXT_PUBLIC_SUPABASE_KEY
+//
+//  For this static GitHub Pages site, the anon key is safe to include
+//  because RLS is the authoritative access-control layer.
 // ══════════════════════════════════════════════════════════════════════
 
 (function () {
   'use strict';
 
-  // Read configuration from global variables set before this script loads
-  var SUPABASE_URL = window.__SUPABASE_URL__ || '';
-  var SUPABASE_KEY = window.__SUPABASE_KEY__ || '';
+  // ── Configuration (single source of truth) ──
+  // If window overrides are set (for testing/staging), prefer those.
+  // Otherwise use the production values below.
+  var SUPABASE_URL = window.__SUPABASE_URL__ ||
+    'https://foajrtjogogbpjvddlks.supabase.co';
+  var SUPABASE_KEY = window.__SUPABASE_KEY__ ||
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvYWpydGpvZ29nYnBqdmRkbGtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODAzNTksImV4cCI6MjA5MTA1NjM1OX0.ETc3FoUiwRRsdHwvjyZjJUO_qDRCj8d-Z2GRdTaGuiw';
+
+  // SECURITY: Validate URL format before use
+  if (SUPABASE_URL && !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(SUPABASE_URL)) {
+    console.error('[WebPilot] Invalid Supabase URL format — possible tampering');
+    SUPABASE_URL = '';
+  }
+
+  // SECURITY: Validate key is a JWT (three base64 segments)
+  if (SUPABASE_KEY && !/^eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(SUPABASE_KEY)) {
+    console.error('[WebPilot] Invalid Supabase key format — possible tampering');
+    SUPABASE_KEY = '';
+  }
 
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.error(
-      '[WebPilot] Supabase not configured. Set window.__SUPABASE_URL__ and window.__SUPABASE_KEY__ before loading supabase-config.js'
+      '[WebPilot] Supabase not configured. Check supabase-config.js'
     );
   }
 

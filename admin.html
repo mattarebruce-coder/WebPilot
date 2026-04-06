@@ -10,11 +10,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" crossorigin="anonymous">
   <link rel="stylesheet" href="admin.css?v=5">
 
-  <!-- SECURITY: CSP allowing Supabase CDN and Supabase API -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.in; frame-ancestors 'none'; base-uri 'self'; object-src 'none';">
+  <!-- SECURITY: Content Security Policy (OWASP A05:2021 — Security Misconfiguration)
+       - 'unsafe-inline' for scripts: required for inline app logic; TODO: move to external .js file to remove
+       - connect-src: restricted to Supabase API domain only
+       - form-action: 'none' since forms are handled via JS fetch
+       - upgrade-insecure-requests: force HTTPS for all sub-resources -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.in; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'none'; upgrade-insecure-requests;">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
+  <!-- SECURITY: Prevent MIME type sniffing and clickjacking -->
+  <meta http-equiv="X-Permitted-Cross-Domain-Policies" content="none">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
 </head>
 <body>
 
@@ -255,12 +262,9 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- ══ Scripts ══ -->
-  <!-- SET YOUR SUPABASE CREDENTIALS HERE -->
-  <script>
-    window.__SUPABASE_URL__ = 'https://foajrtjogogbpjvddlks.supabase.co';
-    window.__SUPABASE_KEY__ = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvYWpydGpvZ29nYnBqdmRkbGtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODAzNTksImV4cCI6MjA5MTA1NjM1OX0.ETc3FoUiwRRsdHwvjyZjJUO_qDRCj8d-Z2GRdTaGuiw';
-  </script>
+  <!-- SECURITY: Keys are centralized in supabase-config.js (single source of truth) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="security.js?v=5"></script>
   <script src="supabase-config.js?v=5"></script>
 
   <script>
@@ -303,6 +307,54 @@
     var statActive = document.getElementById('statActive');
     var statRevenue = document.getElementById('statRevenue');
     var statPending = document.getElementById('statPending');
+
+    // ── Security Utilities ──
+    var SEC = window.WebPilotSecurity;
+
+    // SECURITY: Rate limiters (OWASP A04:2021 — Insecure Design)
+    // Login: 5 attempts per 15 minutes — prevents brute-force
+    var loginLimiter = new SEC.RateLimiter('admin_login', 5, 15 * 60 * 1000);
+    // Client save: 20 per 5 minutes — prevents spam/abuse
+    var saveLimiter = new SEC.RateLimiter('admin_save', 20, 5 * 60 * 1000);
+    // Note add: 30 per 5 minutes
+    var noteLimiter = new SEC.RateLimiter('admin_note', 30, 5 * 60 * 1000);
+
+    // SECURITY: Validation schemas (OWASP A03:2021 — Injection)
+    var LOGIN_SCHEMA = {
+      email:    { label: 'Email',    type: 'email', required: true, maxLength: 254 },
+      password: { label: 'Password', type: 'string', required: true, minLength: 1, maxLength: 200 }
+    };
+
+    var CLIENT_SCHEMA = {
+      name:     { label: 'Client Name', type: 'string', required: true, minLength: 1, maxLength: 100, pattern: SEC.PATTERNS.name },
+      email:    { label: 'Email',        type: 'email',  required: true, maxLength: 254 },
+      phone:    { label: 'Phone',        type: 'tel',    required: false, maxLength: 30 },
+      company:  { label: 'Company',      type: 'string', required: false, maxLength: 100, pattern: SEC.PATTERNS.safeText }
+    };
+
+    var PROJECT_SCHEMA = {
+      project_name:   { label: 'Project Name',   type: 'string',  required: true, minLength: 1, maxLength: 200, pattern: SEC.PATTERNS.safeText },
+      project_type:   { label: 'Project Type',   type: 'string',  required: true, allowedValues: ['Website', 'Redesign', 'Maintenance', 'SEO', 'Other'] },
+      status:         { label: 'Status',          type: 'string',  required: true, allowedValues: ['New', 'In Progress', 'Review', 'Revision', 'Complete', 'On Hold'] },
+      priority:       { label: 'Priority',        type: 'string',  required: true, allowedValues: ['Low', 'Medium', 'High', 'Urgent'] },
+      progress:       { label: 'Progress',        type: 'integer', required: true, min: 0, max: 100 },
+      start_date:     { label: 'Start Date',      type: 'date',    required: false },
+      deadline:       { label: 'Deadline',         type: 'date',    required: false },
+      budget:         { label: 'Budget',           type: 'number',  required: false, min: 0, max: 99999999.99 },
+      amount_paid:    { label: 'Amount Paid',      type: 'number',  required: false, min: 0, max: 99999999.99 },
+      payment_status: { label: 'Payment Status',   type: 'string',  required: true, allowedValues: ['Unpaid', 'Partial', 'Paid'] },
+      invoice_link:   { label: 'Invoice Link',     type: 'url',     required: false, maxLength: 500 },
+      file_links:     { label: 'File Links',       type: 'string',  required: false, maxLength: 2000, pattern: SEC.PATTERNS.safeText }
+    };
+
+    var NOTE_SCHEMA = {
+      note: { label: 'Note', type: 'string', required: true, minLength: 1, maxLength: 5000, pattern: SEC.PATTERNS.safeText }
+    };
+
+    // SECURITY: Allowed field lists for mass-assignment protection
+    var CLIENT_FIELDS = ['name', 'email', 'phone', 'company'];
+    var PROJECT_FIELDS = ['project_name', 'project_type', 'status', 'priority', 'progress',
+      'start_date', 'deadline', 'budget', 'amount_paid', 'payment_status', 'invoice_link', 'file_links'];
 
     // ── State ──
     var allData = [];       // joined client+project rows
@@ -371,16 +423,40 @@
     loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
       loginError.classList.remove('visible');
+
+      // SECURITY: Rate limit login attempts (brute-force protection)
+      var rlCheck = loginLimiter.check();
+      if (!rlCheck.allowed) {
+        loginError.textContent = SEC.formatRetryMessage(rlCheck.retryAfter);
+        loginError.classList.add('visible');
+        return;
+      }
+
+      var email = $('loginEmail').value.trim();
+      var password = $('loginPassword').value;
+
+      // SECURITY: Schema validation before sending
+      var loginErrors = SEC.validateSchema(
+        { email: email, password: password },
+        LOGIN_SCHEMA
+      );
+      if (loginErrors.length > 0) {
+        loginError.textContent = loginErrors[0];
+        loginError.classList.add('visible');
+        return;
+      }
+
       loginBtn.textContent = 'Signing in...';
       loginBtn.disabled = true;
       try {
-        var email = $('loginEmail').value.trim();
-        var password = $('loginPassword').value;
         await window.WebPilotSignIn(email, password);
         var user = await window.WebPilotGetUser();
+        // SECURITY: Reset rate limiter on successful login
+        loginLimiter.reset();
         showDashboard(user);
       } catch (err) {
-        loginError.textContent = err.message || 'Invalid credentials';
+        // SECURITY: Generic error message to prevent user enumeration
+        loginError.textContent = 'Invalid email or password';
         loginError.classList.add('visible');
       }
       loginBtn.textContent = 'Sign In';
@@ -605,31 +681,64 @@
         clientForm.reportValidity();
         return;
       }
+
+      // SECURITY: Rate limit saves
+      var rlCheck = saveLimiter.check();
+      if (!rlCheck.allowed) {
+        toast(SEC.formatRetryMessage(rlCheck.retryAfter), 'error');
+        return;
+      }
+
+      // SECURITY: Sanitize all inputs before processing
+      var rawClient = {
+        name: SEC.sanitizeString($('fName').value),
+        email: $('fEmail').value.trim(),
+        phone: SEC.sanitizeString($('fPhone').value),
+        company: SEC.sanitizeString($('fCompany').value)
+      };
+
+      var rawProject = {
+        project_name: SEC.sanitizeString($('fProject').value),
+        project_type: $('fType').value,
+        status: $('fStatus').value,
+        priority: $('fPriority').value,
+        progress: String(parseInt(fProgress.value, 10) || 0),
+        start_date: $('fStart').value || '',
+        deadline: $('fDeadline').value || '',
+        budget: String(parseFloat($('fBudget').value) || 0),
+        amount_paid: String(parseFloat($('fAmountPaid').value) || 0),
+        payment_status: $('fPayment').value,
+        invoice_link: $('fInvoice').value.trim(),
+        file_links: SEC.sanitizeString($('fFiles').value)
+      };
+
+      // SECURITY: Schema-based validation (type checks, length limits, enum checks)
+      var clientErrors = SEC.validateSchema(rawClient, CLIENT_SCHEMA);
+      var projectErrors = SEC.validateSchema(rawProject, PROJECT_SCHEMA);
+      var allErrors = clientErrors.concat(projectErrors);
+
+      if (allErrors.length > 0) {
+        toast(allErrors[0], 'error');
+        return;
+      }
+
+      // SECURITY: Filter to allowed fields only (mass-assignment protection)
+      var clientData = SEC.filterFields(CLIENT_FIELDS, rawClient);
+      var projectData = SEC.filterFields(PROJECT_FIELDS, rawProject);
+
+      // Coerce types for Supabase
+      projectData.progress = parseInt(projectData.progress, 10);
+      projectData.budget = parseFloat(projectData.budget);
+      projectData.amount_paid = parseFloat(projectData.amount_paid);
+      projectData.start_date = projectData.start_date || null;
+      projectData.deadline = projectData.deadline || null;
+      // SECURITY: Sanitize URL fields specifically
+      projectData.invoice_link = SEC.sanitizeUrl(projectData.invoice_link) || '';
+
       modalSave.disabled = true;
       modalSave.textContent = 'Saving...';
 
       try {
-        var clientData = {
-          name: $('fName').value.trim(),
-          email: $('fEmail').value.trim(),
-          phone: $('fPhone').value.trim(),
-          company: $('fCompany').value.trim()
-        };
-
-        var projectData = {
-          project_name: $('fProject').value.trim(),
-          project_type: $('fType').value,
-          status: $('fStatus').value,
-          priority: $('fPriority').value,
-          progress: parseInt(fProgress.value, 10),
-          start_date: $('fStart').value || null,
-          deadline: $('fDeadline').value || null,
-          budget: parseFloat($('fBudget').value) || 0,
-          amount_paid: parseFloat($('fAmountPaid').value) || 0,
-          payment_status: $('fPayment').value,
-          invoice_link: $('fInvoice').value.trim(),
-          file_links: $('fFiles').value.trim()
-        };
 
         if (editingClientId) {
           // Update existing
@@ -767,12 +876,28 @@
         addNoteBtn.addEventListener('click', async function () {
           var noteText = document.getElementById('newNoteText');
           if (!noteText || !noteText.value.trim()) return;
+
+          // SECURITY: Rate limit note additions
+          var rlCheck = noteLimiter.check();
+          if (!rlCheck.allowed) {
+            toast(SEC.formatRetryMessage(rlCheck.retryAfter), 'error');
+            return;
+          }
+
+          // SECURITY: Sanitize and validate note content
+          var sanitizedNote = SEC.sanitizeString(noteText.value);
+          var noteErrors = SEC.validateSchema({ note: sanitizedNote }, NOTE_SCHEMA);
+          if (noteErrors.length > 0) {
+            toast(noteErrors[0], 'error');
+            return;
+          }
+
           addNoteBtn.disabled = true;
           addNoteBtn.textContent = '...';
           try {
             var { error } = await db.from('update_notes').insert({
               project_id: projectId,
-              note: noteText.value.trim()
+              note: sanitizedNote
             });
             if (error) throw error;
             toast('Note added');
