@@ -48,16 +48,28 @@ mobileMenu.querySelectorAll('a').forEach(link => {
 });
 
 // ══════════════════════════════════════════════════════
-// SECTION 3: Nav Background on Scroll (unchanged)
+// SECTION 3: Nav + Sticky Bottom Bar on Scroll
 // ══════════════════════════════════════════════════════
 const nav = document.getElementById('nav');
+const bottomBar = document.getElementById('bottomBar');
 
 window.addEventListener('scroll', () => {
   const scrollY = window.scrollY;
+
+  // Nav border intensity on scroll
   if (scrollY > 60) {
     nav.style.borderBottomColor = 'rgba(201,168,76,0.15)';
   } else {
-    nav.style.borderBottomColor = 'rgba(201,168,76,0.08)';
+    nav.style.borderBottomColor = 'rgba(201,168,76,0.06)';
+  }
+
+  // Show/hide sticky bottom bar after scrolling past hero
+  if (bottomBar) {
+    if (scrollY > window.innerHeight * 0.6) {
+      bottomBar.classList.add('visible');
+    } else {
+      bottomBar.classList.remove('visible');
+    }
   }
 }, { passive: true });
 

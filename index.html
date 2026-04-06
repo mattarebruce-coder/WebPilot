@@ -7,7 +7,7 @@
   <meta name="description" content="WebPilot builds and maintains stunning websites so you can focus on your business.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" crossorigin="anonymous">
   <link rel="stylesheet" href="style.css">
 
   <!-- SECURITY: Content Security Policy fallback for static hosting (server headers take priority) -->
@@ -16,21 +16,23 @@
   <meta http-equiv="X-Frame-Options" content="DENY">
   <!-- SECURITY: Prevent MIME sniffing -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <!-- SECURITY: Referrer policy — don't leak full URL cross-origin -->
+  <!-- SECURITY: Referrer policy -->
   <meta name="referrer" content="strict-origin-when-cross-origin">
 </head>
 <body>
 
-  <!-- Nav -->
+  <!-- ══ Top Nav (Awwwards-style) ══ -->
   <nav class="nav" id="nav">
     <div class="nav-inner">
-      <a href="#" class="logo">WebPilot</a>
+      <a href="#" class="logo">W.</a>
       <ul class="nav-links">
         <li><a href="#services">Services</a></li>
-        <li><a href="#work">How It Works</a></li>
-        <li><a href="#why">Why Us</a></li>
-        <li><a href="#contact" class="nav-cta">Get in Touch</a></li>
+        <li><a href="#work">Process</a></li>
+        <li><a href="#why">Results</a></li>
       </ul>
+      <div class="nav-right">
+        <a href="#contact" class="nav-cta">Start a Project</a>
+      </div>
       <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
         <span></span><span></span><span></span>
       </button>
@@ -41,139 +43,181 @@
   <div class="mobile-menu" id="mobileMenu">
     <ul>
       <li><a href="#services">Services</a></li>
-      <li><a href="#work">How It Works</a></li>
-      <li><a href="#why">Why Us</a></li>
-      <li><a href="#contact">Get in Touch</a></li>
+      <li><a href="#work">Process</a></li>
+      <li><a href="#why">Results</a></li>
+      <li><a href="#contact">Start a Project</a></li>
     </ul>
   </div>
 
-  <!-- Hero -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1 class="reveal">
-        <span class="line">Your website.</span>
-        <span class="line">Built. Maintained.</span>
-        <span class="line accent">Perfected.</span>
-      </h1>
-      <div class="hero-sub reveal delay-1">
-        <span class="bubble">We design, develop, and maintain websites that look sharp and work flawlessly — so you never have to think about it.</span>
-      </div>
-      <div class="hero-actions reveal delay-2">
-        <a href="#contact" class="btn btn-primary">Start a Project</a>
-        <a href="#services" class="btn btn-ghost">See What We Do</a>
-      </div>
+  <!-- ══ Hero (Awwwards-style: massive centered text + metadata) ══ -->
+  <section class="hero" id="hero">
+    <div class="hero-meta reveal">
+      <span class="hero-tag">Web Design & Maintenance</span>
+      <span class="hero-divider"></span>
+      <span class="hero-date">Est. 2026</span>
+    </div>
+    <h1 class="hero-title reveal">
+      WEBPILOT
+    </h1>
+    <p class="hero-subtitle reveal delay-1">We design, develop, and maintain websites that look sharp and work flawlessly — so you never have to think about it.</p>
+    <div class="hero-actions reveal delay-2">
+      <a href="#contact" class="btn btn-primary">Start a Project</a>
+      <a href="#services" class="btn btn-ghost">See What We Do</a>
     </div>
     <div class="hero-gradient"></div>
   </section>
 
-  <!-- Services -->
-  <section class="services" id="services">
+  <!-- ══ Services (Horizontal scroll cards like Awwwards nominees) ══ -->
+  <section class="section" id="services">
     <div class="container">
-      <p class="section-label reveal">What We Do</p>
-      <h2 class="section-title reveal">Everything your website needs.<br>Nothing it doesn't.</h2>
-      <div class="services-grid">
-        <div class="service-card reveal">
-          <div class="service-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <h3>Web Design</h3>
-          <span class="bubble">Clean, modern designs that reflect your brand and convert visitors into customers.</span>
+      <div class="section-header reveal">
+        <div>
+          <span class="section-label">Services</span>
+          <h2 class="section-title">What we do.</h2>
         </div>
-        <div class="service-card reveal">
-          <div class="service-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          </div>
-          <h3>Development</h3>
-          <span class="bubble">Fast, responsive, and accessible code that performs beautifully on every device.</span>
+        <p class="section-sub">Everything your website needs. Nothing it doesn't.</p>
+      </div>
+    </div>
+    <div class="scroll-row reveal">
+      <div class="card">
+        <div class="card-visual card-visual--design">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         </div>
-        <div class="service-card reveal">
-          <div class="service-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <h3>Maintenance</h3>
-          <span class="bubble">Ongoing updates, security patches, and performance monitoring. We keep it running.</span>
+        <span class="card-tag">SERVICE</span>
+        <h3 class="card-title">Web Design</h3>
+        <p class="card-desc">Clean, modern designs that reflect your brand and convert visitors into customers.</p>
+      </div>
+      <div class="card">
+        <div class="card-visual card-visual--dev">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         </div>
-        <div class="service-card reveal">
-          <div class="service-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          </div>
-          <h3>SEO & Speed</h3>
-          <span class="bubble">Optimized for search engines and built for speed. Your site will be found — and fast.</span>
+        <span class="card-tag">SERVICE</span>
+        <h3 class="card-title">Development</h3>
+        <p class="card-desc">Fast, responsive, and accessible code that performs beautifully on every device.</p>
+      </div>
+      <div class="card">
+        <div class="card-visual card-visual--maintain">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <span class="card-tag">SERVICE</span>
+        <h3 class="card-title">Maintenance</h3>
+        <p class="card-desc">Ongoing updates, security patches, and performance monitoring. We keep it running.</p>
+      </div>
+      <div class="card">
+        <div class="card-visual card-visual--seo">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <span class="card-tag">SERVICE</span>
+        <h3 class="card-title">SEO & Speed</h3>
+        <p class="card-desc">Optimized for search engines and built for speed. Your site will be found — and fast.</p>
+      </div>
+    </div>
+    <div class="container section-cta-row reveal">
+      <span class="section-cta-text">See all our capabilities</span>
+      <a href="#contact" class="section-cta-link">View Services &rarr;</a>
+    </div>
+  </section>
+
+  <!-- ══ How It Works (Awwwards winners-style grid) ══ -->
+  <section class="section section--dark" id="work">
+    <div class="container">
+      <div class="section-header reveal">
+        <div>
+          <span class="section-label">Process</span>
+          <h2 class="section-title">How it works.</h2>
+        </div>
+        <p class="section-sub">Three steps. Zero headaches.</p>
+      </div>
+      <div class="process-grid">
+        <div class="process-card reveal">
+          <span class="process-num">01</span>
+          <h3 class="process-title">Tell us what you need</h3>
+          <p class="process-desc">Share your vision. We'll ask the right questions and map out the plan.</p>
+        </div>
+        <div class="process-card reveal">
+          <span class="process-num">02</span>
+          <h3 class="process-title">We build it</h3>
+          <p class="process-desc">Design, develop, and refine until it's exactly right. You'll see progress every step of the way.</p>
+        </div>
+        <div class="process-card reveal">
+          <span class="process-num">03</span>
+          <h3 class="process-title">We keep it running</h3>
+          <p class="process-desc">Launch day is just the beginning. We maintain, update, and optimize — indefinitely.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- How It Works -->
-  <section class="work" id="work">
+  <!-- ══ Results / Why Us (Awwwards stats style) ══ -->
+  <section class="section" id="why">
     <div class="container">
-      <p class="section-label reveal">How It Works</p>
-      <h2 class="section-title reveal">Three steps. Zero headaches.</h2>
-      <div class="steps">
-        <div class="step reveal">
-          <div class="step-num">01</div>
-          <h3>Tell us what you need</h3>
-          <span class="bubble">Share your vision. We'll ask the right questions and map out the plan.</span>
+      <div class="section-header reveal">
+        <div>
+          <span class="section-label">Results</span>
+          <h2 class="section-title">Built different.<br>Maintained better.</h2>
         </div>
-        <div class="step-line reveal"></div>
-        <div class="step reveal">
-          <div class="step-num">02</div>
-          <h3>We build it</h3>
-          <span class="bubble">Design, develop, and refine until it's exactly right. You'll see progress every step of the way.</span>
+        <p class="section-sub">Numbers that speak for themselves.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card reveal">
+          <div class="stat-number">99.9%</div>
+          <div class="stat-label">Uptime</div>
+          <p class="stat-desc">Guaranteed on every site we maintain</p>
         </div>
-        <div class="step-line reveal"></div>
-        <div class="step reveal">
-          <div class="step-num">03</div>
-          <h3>We keep it running</h3>
-          <span class="bubble">Launch day is just the beginning. We maintain, update, and optimize — indefinitely.</span>
+        <div class="stat-card reveal">
+          <div class="stat-number">&lt;2s</div>
+          <div class="stat-label">Load Time</div>
+          <p class="stat-desc">Average page load across our projects</p>
+        </div>
+        <div class="stat-card reveal">
+          <div class="stat-number">24h</div>
+          <div class="stat-label">Response</div>
+          <p class="stat-desc">Response time for maintenance requests</p>
+        </div>
+        <div class="stat-card reveal">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Satisfaction</div>
+          <p class="stat-desc">We don't stop until you love it</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Why Us -->
-  <section class="why" id="why">
+  <!-- ══ CTA Cards (Awwwards dual-card style) ══ -->
+  <section class="section section--dark">
     <div class="container">
-      <p class="section-label reveal">Why WebPilot</p>
-      <h2 class="section-title reveal">Built different. Maintained better.</h2>
-      <div class="why-grid">
-        <div class="why-card reveal">
-          <div class="why-number">99.9%</div>
-          <span class="bubble">Uptime guarantee on every site we maintain</span>
+      <div class="cta-duo">
+        <div class="cta-card reveal">
+          <span class="cta-card-label">Start a project</span>
+          <h3 class="cta-card-title">Ready to build your next website?</h3>
+          <a href="#contact" class="btn btn-primary">Get in Touch</a>
         </div>
-        <div class="why-card reveal">
-          <div class="why-number">&lt;2s</div>
-          <span class="bubble">Average page load time across our projects</span>
-        </div>
-        <div class="why-card reveal">
-          <div class="why-number">24h</div>
-          <span class="bubble">Response time for maintenance requests</span>
-        </div>
-        <div class="why-card reveal">
-          <div class="why-number">100%</div>
-          <span class="bubble">Satisfaction — we don't stop until you love it</span>
+        <div class="cta-card reveal">
+          <span class="cta-card-label">Maintenance</span>
+          <h3 class="cta-card-title">Have a site that needs ongoing care?</h3>
+          <a href="#contact" class="btn btn-ghost">Let's Talk</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Contact -->
-  <section class="contact" id="contact">
+  <!-- ══ Contact ══ -->
+  <section class="section" id="contact">
     <div class="container">
-      <div class="contact-layout">
-        <div class="contact-info reveal">
-          <p class="section-label">Get in Touch</p>
-          <h2 class="section-title">Let's build something great.</h2>
-          <div class="contact-desc">
-            <span class="bubble">Tell us about your project, and we'll get back to you within 24 hours.</span>
-          </div>
+      <div class="section-header reveal">
+        <div>
+          <span class="section-label">Contact</span>
+          <h2 class="section-title">Let's build<br>something great.</h2>
         </div>
-        <form class="contact-form reveal" id="contactForm" action="https://formspree.io/f/mpqoyalg" method="POST" novalidate>
-          <!-- SECURITY: Honeypot field — hidden from real users, bots fill it and get rejected -->
-          <div class="form-group" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
-            <label for="_gotcha">Leave blank</label>
-            <input type="text" id="_gotcha" name="_gotcha" tabindex="-1" autocomplete="off">
-          </div>
+        <p class="section-sub">Tell us about your project and we'll get back to you within 24 hours.</p>
+      </div>
+      <form class="contact-form reveal" id="contactForm" action="https://formspree.io/f/mpqoyalg" method="POST" novalidate>
+        <!-- SECURITY: Honeypot field -->
+        <div class="form-group" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+          <label for="_gotcha">Leave blank</label>
+          <input type="text" id="_gotcha" name="_gotcha" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="form-row">
           <div class="form-group">
             <label for="name">Name</label>
             <input type="text" id="name" name="name" required placeholder="Your name" autocomplete="name" maxlength="100">
@@ -182,25 +226,64 @@
             <label for="email">Email</label>
             <input type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email" maxlength="254">
           </div>
-          <div class="form-group">
-            <label for="message">Message</label>
-            <textarea id="message" name="message" rows="5" required placeholder="Tell us about your project..." maxlength="5000"></textarea>
-          </div>
-          <!-- SECURITY: Rate-limit feedback area -->
-          <div id="formFeedback" class="form-feedback" role="alert" aria-live="polite"></div>
-          <button type="submit" id="submitBtn" class="btn btn-primary btn-full">Send Message</button>
-        </form>
-      </div>
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="6" required placeholder="Tell us about your project..." maxlength="5000"></textarea>
+        </div>
+        <div id="formFeedback" class="form-feedback" role="alert" aria-live="polite"></div>
+        <button type="submit" id="submitBtn" class="btn btn-primary btn-submit">Send Message &rarr;</button>
+      </form>
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- ══ Footer (Awwwards multi-column style) ══ -->
   <footer class="footer">
-    <div class="container footer-inner">
-      <a href="#" class="logo">WebPilot</a>
-      <p>&copy; 2026 WebPilot. All rights reserved.</p>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="logo footer-logo">W.</a>
+          <p class="footer-tagline">We build and maintain websites so you can focus on your business.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="#services">Web Design</a></li>
+            <li><a href="#services">Development</a></li>
+            <li><a href="#services">Maintenance</a></li>
+            <li><a href="#services">SEO & Speed</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#work">Process</a></li>
+            <li><a href="#why">Results</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 WebPilot. All rights reserved.</p>
+      </div>
     </div>
   </footer>
+
+  <!-- ══ Sticky Bottom Bar (Awwwards-style floating nav) ══ -->
+  <div class="bottom-bar" id="bottomBar">
+    <a href="#" class="bottom-bar-logo">W.</a>
+    <a href="#services" class="bottom-pill">Services</a>
+    <a href="#work" class="bottom-pill">Process</a>
+    <a href="#why" class="bottom-pill">Results</a>
+    <a href="#contact" class="bottom-pill bottom-pill--active">Contact</a>
+  </div>
 
   <script src="script.js"></script>
 </body>
