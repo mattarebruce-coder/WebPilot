@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebPilot — Project Status</title>
+  <meta name="description" content="Check the status of your WebPilot project.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" crossorigin="anonymous">
+  <link rel="stylesheet" href="status-page.css?v=4">
+
+  <!-- SECURITY: CSP allowing Supabase CDN and API -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.in; frame-ancestors 'none'; base-uri 'self'; object-src 'none';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+</head>
+<body>
+
+  <!-- Subtle Grid Background -->
+  <div class="grid-bg" aria-hidden="true">
+    <div class="grid-bg-lines"></div>
+    <div class="grid-bg-glow"></div>
+  </div>
+
+  <div class="status-page">
+
+    <!-- Header -->
+    <div class="sp-header">
+      <a href="index.html" class="sp-logo">W.</a>
+      <div class="sp-tagline">Project Status Portal</div>
+    </div>
+
+    <!-- Lookup Section -->
+    <div id="lookupSection">
+      <div class="lookup-card">
+        <div class="lookup-title">Check Your Project Status</div>
+        <div class="lookup-subtitle">Enter the email associated with your project to view progress and updates.</div>
+        <form class="lookup-form" id="lookupForm">
+          <input type="email" id="lookupEmail" placeholder="you@example.com" required autocomplete="email">
+          <button type="submit" id="lookupBtn">Check Status</button>
+        </form>
+        <div class="lookup-error" id="lookupError"></div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <p>Fetching your project details...</p>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section" id="resultsSection">
+      <!-- Client Banner -->
+      <div class="client-banner">
+        <div>
+          <div class="client-banner-name" id="resultName"></div>
+          <div class="client-banner-company" id="resultCompany"></div>
+        </div>
+        <button class="client-banner-back" id="backBtn">&larr; Look up another</button>
+      </div>
+
+      <!-- Projects will be rendered here -->
+      <div id="projectsList"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="sp-footer">
+      <p>&copy; 2026 <a href="index.html">WebPilot</a>. All rights reserved.</p>
+    </div>
+
+  </div>
+
+  <!-- ══ Scripts ══ -->
+  <!-- SET YOUR SUPABASE CREDENTIALS HERE -->
+  <script>
+    window.__SUPABASE_URL__ = '';   // e.g. 'https://xyzproject.supabase.co'
+    window.__SUPABASE_KEY__ = '';   // Your anon/public key
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js?v=4"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ── References ──
+    var lookupSection = document.getElementById('lookupSection');
+    var lookupForm = document.getElementById('lookupForm');
+    var lookupEmail = document.getElementById('lookupEmail');
+    var lookupError = document.getElementById('lookupError');
+    var lookupBtn = document.getElementById('lookupBtn');
+    var loadingState = document.getElementById('loadingState');
+    var resultsSection = document.getElementById('resultsSection');
+    var resultName = document.getElementById('resultName');
+    var resultCompany = document.getElementById('resultCompany');
+    var projectsList = document.getElementById('projectsList');
+    var backBtn = document.getElementById('backBtn');
+
+    // ── Utilities ──
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    function formatDate(d) {
+      if (!d) return '—';
+      return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatTimestamp(ts) {
+      if (!ts) return '';
+      var d = new Date(ts);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+        ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function statusBadgeClass(s) {
+      return 'badge badge-' + (s || '').toLowerCase().replace(/\s+/g, '-');
+    }
+
+    function paymentBadgeClass(s) {
+      return 'badge badge-' + (s || '').toLowerCase();
+    }
+
+    function showView(view) {
+      lookupSection.style.display = view === 'lookup' ? 'block' : 'none';
+      loadingState.classList.toggle('active', view === 'loading');
+      resultsSection.classList.toggle('active', view === 'results');
+    }
+
+    // ── Check URL params for email ──
+    function getEmailFromURL() {
+      var params = new URLSearchParams(window.location.search);
+      return params.get('email') || '';
+    }
+
+    // ── Lookup ──
+    async function doLookup(email) {
+      lookupError.classList.remove('visible');
+      showView('loading');
+
+      try {
+        var result = await window.WebPilotGetClientStatus(email);
+
+        if (!result || !result.client) {
+          lookupError.textContent = 'No project found for this email address. Please check and try again.';
+          lookupError.classList.add('visible');
+          showView('lookup');
+          return;
+        }
+
+        // Render results
+        resultName.textContent = result.client.name;
+        resultCompany.textContent = result.client.company || '';
+
+        var projects = result.projects || [];
+        if (projects.length === 0) {
+          projectsList.innerHTML = '<div class="lookup-card" style="text-align:center"><p style="color:var(--gray-400)">No active projects found.</p></div>';
+        } else {
+          var html = '';
+          projects.forEach(function (p) {
+            html += '<div class="project-card">';
+
+            // Header
+            html += '<div class="project-card-header">';
+            html += '<div class="project-card-name">' + escapeHtml(p.project_name) + '</div>';
+            html += '<div class="project-card-type">' + escapeHtml(p.project_type) + '</div>';
+            html += '</div>';
+
+            // Body
+            html += '<div class="project-card-body">';
+
+            // Status row
+            html += '<div class="status-row">';
+            html += '<span class="status-label">Current Status</span>';
+            html += '<span class="' + statusBadgeClass(p.status) + '">' + escapeHtml(p.status) + '</span>';
+            html += '</div>';
+
+            // Progress
+            html += '<div class="progress-section">';
+            html += '<div class="progress-header">';
+            html += '<span class="progress-label">Project Progress</span>';
+            html += '<span class="progress-percent">' + (p.progress || 0) + '%</span>';
+            html += '</div>';
+            html += '<div class="progress-bar"><div class="progress-bar-fill" style="width:' + (p.progress || 0) + '%"></div></div>';
+            html += '</div>';
+
+            // Info grid
+            html += '<div class="info-grid">';
+            if (p.start_date) {
+              html += '<div class="info-item"><div class="info-item-label">Start Date</div><div class="info-item-value">' + formatDate(p.start_date) + '</div></div>';
+            }
+            if (p.deadline) {
+              html += '<div class="info-item"><div class="info-item-label">Estimated Deadline</div><div class="info-item-value">' + formatDate(p.deadline) + '</div></div>';
+            }
+            html += '<div class="info-item"><div class="info-item-label">Payment Status</div><div class="info-item-value"><span class="' + paymentBadgeClass(p.payment_status) + '">' + escapeHtml(p.payment_status) + '</span></div></div>';
+            html += '<div class="info-item"><div class="info-item-label">Project Type</div><div class="info-item-value">' + escapeHtml(p.project_type) + '</div></div>';
+            html += '</div>';
+
+            html += '</div>';
+
+            // Updates timeline
+            var notes = p.notes || [];
+            html += '<div class="updates-section">';
+            html += '<div class="updates-title">Latest Updates</div>';
+            if (notes.length === 0) {
+              html += '<div class="no-updates">No updates posted yet. Check back soon!</div>';
+            } else {
+              html += '<div class="timeline">';
+              // Show up to 10 most recent
+              notes.slice(0, 10).forEach(function (n) {
+                html += '<div class="timeline-item">';
+                html += '<div class="timeline-date">' + formatTimestamp(n.created_at) + '</div>';
+                html += '<div class="timeline-text">' + escapeHtml(n.note) + '</div>';
+                html += '</div>';
+              });
+              html += '</div>';
+              if (notes.length > 10) {
+                html += '<p style="font-size:0.8rem;color:var(--gray-400);padding:12px 0 0;text-align:center">Showing 10 of ' + notes.length + ' updates</p>';
+              }
+            }
+            html += '</div>';
+
+            html += '</div>';
+          });
+          projectsList.innerHTML = html;
+        }
+
+        showView('results');
+
+        // Animate progress bars after render
+        setTimeout(function () {
+          document.querySelectorAll('.progress-bar-fill').forEach(function (bar) {
+            bar.style.width = bar.style.width; // trigger reflow for animation
+          });
+        }, 50);
+
+      } catch (err) {
+        lookupError.textContent = 'Something went wrong. Please try again later.';
+        lookupError.classList.add('visible');
+        showView('lookup');
+        console.error('[WebPilot Status]', err);
+      }
+    }
+
+    // ── Events ──
+    lookupForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = lookupEmail.value.trim();
+      if (!email) return;
+      doLookup(email);
+    });
+
+    backBtn.addEventListener('click', function () {
+      showView('lookup');
+      // Clear URL params
+      if (window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    });
+
+    // ── Init ──
+    if (!window.WebPilotSupabase) {
+      lookupSection.innerHTML = '<div class="lookup-card"><div class="lookup-title" style="color:var(--red)">Configuration Error</div><div class="lookup-subtitle">Supabase is not configured. Please contact the site administrator.</div></div>';
+    } else {
+      // Check for email in URL
+      var urlEmail = getEmailFromURL();
+      if (urlEmail) {
+        lookupEmail.value = urlEmail;
+        doLookup(urlEmail);
+      }
+    }
+
+  })();
+  </script>
+</body>
+</html>

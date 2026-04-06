@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebPilot — Admin Dashboard</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" crossorigin="anonymous">
+  <link rel="stylesheet" href="admin.css?v=4">
+
+  <!-- SECURITY: CSP allowing Supabase CDN and Supabase API -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.in; frame-ancestors 'none'; base-uri 'self'; object-src 'none';">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+</head>
+<body>
+
+  <!-- ══ Login Screen ══ -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-logo">W.</div>
+      <div class="login-subtitle">Admin Dashboard — Sign in to continue</div>
+      <div class="login-error" id="loginError"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="admin@webpilot.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Your password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ Dashboard ══ -->
+  <div class="dashboard" id="dashboard">
+
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <a href="index.html" class="topbar-logo">W.</a>
+        <span class="topbar-label">Admin Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-user" id="adminEmail"></span>
+        <button class="btn-logout" id="logoutBtn">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- Overview Cards -->
+      <div class="overview-grid" id="overviewGrid">
+        <div class="overview-card">
+          <div class="overview-card-label">Total Clients</div>
+          <div class="overview-card-value" id="statClients">0</div>
+        </div>
+        <div class="overview-card">
+          <div class="overview-card-label">Active Projects</div>
+          <div class="overview-card-value" id="statActive">0</div>
+        </div>
+        <div class="overview-card">
+          <div class="overview-card-label">Total Revenue</div>
+          <div class="overview-card-value" id="statRevenue">$0</div>
+        </div>
+        <div class="overview-card">
+          <div class="overview-card-label">Pending Payments</div>
+          <div class="overview-card-value" id="statPending">$0</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Search clients...">
+          </div>
+          <select class="filter-select" id="filterStatus">
+            <option value="">All Statuses</option>
+            <option value="New">New</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Review">Review</option>
+            <option value="Revision">Revision</option>
+            <option value="Complete">Complete</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+          <select class="filter-select" id="filterPriority">
+            <option value="">All Priorities</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Urgent">Urgent</option>
+          </select>
+        </div>
+        <button class="btn-add" id="addClientBtn">+ Add Client</button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <div class="table-scroll">
+          <table id="clientsTable">
+            <thead>
+              <tr>
+                <th data-sort="name">Name <span class="sort-arrow">&#9650;</span></th>
+                <th data-sort="company">Company <span class="sort-arrow">&#9650;</span></th>
+                <th data-sort="project_name">Project <span class="sort-arrow">&#9650;</span></th>
+                <th data-sort="status">Status <span class="sort-arrow">&#9650;</span></th>
+                <th data-sort="priority">Priority <span class="sort-arrow">&#9650;</span></th>
+                <th data-sort="progress">Progress <span class="sort-arrow">&#9650;</span></th>
+                <th data-sort="deadline">Deadline <span class="sort-arrow">&#9650;</span></th>
+                <th data-sort="payment_status">Payment <span class="sort-arrow">&#9650;</span></th>
+              </tr>
+            </thead>
+            <tbody id="clientsBody"></tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span id="tableInfo">0 clients</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Add / Edit Client Modal ══ -->
+  <div class="modal-overlay" id="clientModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Add New Client</div>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="clientForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="fName">Client Name *</label>
+              <input type="text" id="fName" required placeholder="John Doe" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="fEmail">Email *</label>
+              <input type="email" id="fEmail" required placeholder="john@example.com" maxlength="254">
+            </div>
+            <div class="form-group">
+              <label for="fPhone">Phone</label>
+              <input type="tel" id="fPhone" placeholder="(555) 123-4567" maxlength="30">
+            </div>
+            <div class="form-group">
+              <label for="fCompany">Company</label>
+              <input type="text" id="fCompany" placeholder="Acme Inc." maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="fProject">Project Name *</label>
+              <input type="text" id="fProject" required placeholder="Website Redesign" maxlength="200">
+            </div>
+            <div class="form-group">
+              <label for="fType">Project Type</label>
+              <select id="fType">
+                <option>Website</option>
+                <option>Redesign</option>
+                <option>Maintenance</option>
+                <option>SEO</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="fStatus">Status</label>
+              <select id="fStatus">
+                <option>New</option>
+                <option>In Progress</option>
+                <option>Review</option>
+                <option>Revision</option>
+                <option>Complete</option>
+                <option>On Hold</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="fPriority">Priority</label>
+              <select id="fPriority">
+                <option>Low</option>
+                <option selected>Medium</option>
+                <option>High</option>
+                <option>Urgent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="fStart">Start Date</label>
+              <input type="date" id="fStart">
+            </div>
+            <div class="form-group">
+              <label for="fDeadline">Deadline</label>
+              <input type="date" id="fDeadline">
+            </div>
+            <div class="form-group full">
+              <label for="fProgress">Progress</label>
+              <div class="range-group">
+                <input type="range" id="fProgress" min="0" max="100" value="0">
+                <span class="range-value" id="fProgressVal">0%</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="fBudget">Budget ($)</label>
+              <input type="number" id="fBudget" placeholder="5000" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label for="fAmountPaid">Amount Paid ($)</label>
+              <input type="number" id="fAmountPaid" placeholder="0" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label for="fPayment">Payment Status</label>
+              <select id="fPayment">
+                <option>Unpaid</option>
+                <option>Partial</option>
+                <option>Paid</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="fInvoice">Invoice Link</label>
+              <input type="url" id="fInvoice" placeholder="https://..." maxlength="500">
+            </div>
+            <div class="form-group full">
+              <label for="fFiles">File Links (comma-separated)</label>
+              <input type="text" id="fFiles" placeholder="https://drive.google.com/..., https://..." maxlength="2000">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" id="modalCancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="modalSave">Save Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Client Detail Panel ══ -->
+  <div class="detail-panel-overlay" id="detailOverlay"></div>
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-header">
+      <div class="detail-header-title" id="detailName">Client Name</div>
+      <div class="detail-header-actions">
+        <button class="btn btn-ghost btn-sm" id="detailEdit">Edit</button>
+        <button class="modal-close" id="detailClose">&times;</button>
+      </div>
+    </div>
+    <div class="detail-body" id="detailBody">
+      <!-- Filled dynamically -->
+    </div>
+  </div>
+
+  <!-- ══ Toast Container ══ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ══ Scripts ══ -->
+  <!-- SET YOUR SUPABASE CREDENTIALS HERE -->
+  <script>
+    window.__SUPABASE_URL__ = '';   // e.g. 'https://xyzproject.supabase.co'
+    window.__SUPABASE_KEY__ = '';   // Your anon/public key
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js?v=4"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ── References ──
+    var db = window.WebPilotSupabase;
+    var loginScreen = document.getElementById('loginScreen');
+    var dashboard = document.getElementById('dashboard');
+    var loginForm = document.getElementById('loginForm');
+    var loginError = document.getElementById('loginError');
+    var loginBtn = document.getElementById('loginBtn');
+    var logoutBtn = document.getElementById('logoutBtn');
+    var adminEmailEl = document.getElementById('adminEmail');
+    var searchInput = document.getElementById('searchInput');
+    var filterStatus = document.getElementById('filterStatus');
+    var filterPriority = document.getElementById('filterPriority');
+    var addClientBtn = document.getElementById('addClientBtn');
+    var clientsBody = document.getElementById('clientsBody');
+    var tableInfo = document.getElementById('tableInfo');
+    var clientModal = document.getElementById('clientModal');
+    var modalTitle = document.getElementById('modalTitle');
+    var modalClose = document.getElementById('modalClose');
+    var modalCancel = document.getElementById('modalCancel');
+    var modalSave = document.getElementById('modalSave');
+    var clientForm = document.getElementById('clientForm');
+    var detailPanel = document.getElementById('detailPanel');
+    var detailOverlay = document.getElementById('detailOverlay');
+    var detailClose = document.getElementById('detailClose');
+    var detailEdit = document.getElementById('detailEdit');
+    var detailName = document.getElementById('detailName');
+    var detailBody = document.getElementById('detailBody');
+    var toastContainer = document.getElementById('toastContainer');
+    var fProgress = document.getElementById('fProgress');
+    var fProgressVal = document.getElementById('fProgressVal');
+
+    // Stats elements
+    var statClients = document.getElementById('statClients');
+    var statActive = document.getElementById('statActive');
+    var statRevenue = document.getElementById('statRevenue');
+    var statPending = document.getElementById('statPending');
+
+    // ── State ──
+    var allData = [];       // joined client+project rows
+    var sortCol = 'name';
+    var sortDir = 'asc';
+    var editingClientId = null;
+    var editingProjectId = null;
+    var currentDetail = null;
+
+    // ── Utilities ──
+    function $(id) { return document.getElementById(id); }
+
+    function toast(msg, type) {
+      var t = document.createElement('div');
+      t.className = 'toast toast-' + (type || 'success');
+      t.textContent = msg;
+      toastContainer.appendChild(t);
+      setTimeout(function () { t.remove(); }, 3500);
+    }
+
+    function formatCurrency(n) {
+      return '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function formatDate(d) {
+      if (!d) return '—';
+      return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatTimestamp(ts) {
+      if (!ts) return '';
+      var d = new Date(ts);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+        ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function statusBadgeClass(s) {
+      return 'badge badge-' + s.toLowerCase().replace(/\s+/g, '-');
+    }
+
+    function paymentBadgeClass(s) {
+      return 'badge badge-' + s.toLowerCase();
+    }
+
+    function priorityBadgeClass(s) {
+      return 'badge badge-' + s.toLowerCase();
+    }
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    // ── Auth ──
+    async function checkAuth() {
+      var user = await window.WebPilotGetUser();
+      if (user) {
+        showDashboard(user);
+      } else {
+        loginScreen.style.display = 'flex';
+        dashboard.classList.remove('active');
+      }
+    }
+
+    loginForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      loginError.classList.remove('visible');
+      loginBtn.textContent = 'Signing in...';
+      loginBtn.disabled = true;
+      try {
+        var email = $('loginEmail').value.trim();
+        var password = $('loginPassword').value;
+        await window.WebPilotSignIn(email, password);
+        var user = await window.WebPilotGetUser();
+        showDashboard(user);
+      } catch (err) {
+        loginError.textContent = err.message || 'Invalid credentials';
+        loginError.classList.add('visible');
+      }
+      loginBtn.textContent = 'Sign In';
+      loginBtn.disabled = false;
+    });
+
+    logoutBtn.addEventListener('click', async function () {
+      await window.WebPilotSignOut();
+      loginScreen.style.display = 'flex';
+      dashboard.classList.remove('active');
+    });
+
+    function showDashboard(user) {
+      loginScreen.style.display = 'none';
+      dashboard.classList.add('active');
+      adminEmailEl.textContent = user.email;
+      loadData();
+    }
+
+    // ── Data Loading ──
+    async function loadData() {
+      if (!db) return;
+      try {
+        // Load clients with their projects
+        var { data: clients, error: cErr } = await db.from('clients').select('*');
+        if (cErr) throw cErr;
+        var { data: projects, error: pErr } = await db.from('projects').select('*');
+        if (pErr) throw pErr;
+
+        // Join: one row per project, with client info
+        allData = [];
+        (clients || []).forEach(function (c) {
+          var cProjects = (projects || []).filter(function (p) { return p.client_id === c.id; });
+          if (cProjects.length === 0) {
+            // Client with no projects yet
+            allData.push({
+              client_id: c.id,
+              name: c.name,
+              email: c.email,
+              phone: c.phone,
+              company: c.company,
+              project_id: null,
+              project_name: '(No project)',
+              project_type: '',
+              status: '',
+              priority: '',
+              progress: 0,
+              start_date: null,
+              deadline: null,
+              budget: 0,
+              amount_paid: 0,
+              payment_status: '',
+              invoice_link: '',
+              file_links: ''
+            });
+          } else {
+            cProjects.forEach(function (p) {
+              allData.push({
+                client_id: c.id,
+                name: c.name,
+                email: c.email,
+                phone: c.phone,
+                company: c.company,
+                project_id: p.id,
+                project_name: p.project_name,
+                project_type: p.project_type,
+                status: p.status,
+                priority: p.priority,
+                progress: p.progress,
+                start_date: p.start_date,
+                deadline: p.deadline,
+                budget: p.budget,
+                amount_paid: p.amount_paid,
+                payment_status: p.payment_status,
+                invoice_link: p.invoice_link,
+                file_links: p.file_links
+              });
+            });
+          }
+        });
+
+        updateOverview(clients, projects);
+        renderTable();
+      } catch (err) {
+        toast('Error loading data: ' + err.message, 'error');
+      }
+    }
+
+    function updateOverview(clients, projects) {
+      statClients.textContent = (clients || []).length;
+      var active = (projects || []).filter(function (p) {
+        return p.status !== 'Complete' && p.status !== 'On Hold';
+      });
+      statActive.textContent = active.length;
+      var totalBudget = (projects || []).reduce(function (s, p) { return s + Number(p.budget || 0); }, 0);
+      var totalPaid = (projects || []).reduce(function (s, p) { return s + Number(p.amount_paid || 0); }, 0);
+      statRevenue.textContent = formatCurrency(totalPaid);
+      statPending.textContent = formatCurrency(totalBudget - totalPaid);
+    }
+
+    // ── Table Rendering ──
+    function getFilteredData() {
+      var search = searchInput.value.toLowerCase().trim();
+      var statusF = filterStatus.value;
+      var priorityF = filterPriority.value;
+
+      return allData.filter(function (row) {
+        if (statusF && row.status !== statusF) return false;
+        if (priorityF && row.priority !== priorityF) return false;
+        if (search) {
+          var hay = (row.name + ' ' + row.email + ' ' + row.company + ' ' + row.project_name).toLowerCase();
+          if (hay.indexOf(search) === -1) return false;
+        }
+        return true;
+      });
+    }
+
+    function sortData(data) {
+      var col = sortCol;
+      var dir = sortDir === 'asc' ? 1 : -1;
+      return data.slice().sort(function (a, b) {
+        var va = a[col] || '';
+        var vb = b[col] || '';
+        if (col === 'progress' || col === 'budget' || col === 'amount_paid') {
+          return (Number(va) - Number(vb)) * dir;
+        }
+        if (col === 'deadline' || col === 'start_date') {
+          return ((va || '9999') < (vb || '9999') ? -1 : 1) * dir;
+        }
+        return (String(va).toLowerCase() < String(vb).toLowerCase() ? -1 : 1) * dir;
+      });
+    }
+
+    function renderTable() {
+      var filtered = sortData(getFilteredData());
+      tableInfo.textContent = filtered.length + ' client' + (filtered.length !== 1 ? 's' : '');
+
+      if (filtered.length === 0) {
+        clientsBody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No clients found</div><div class="empty-state-sub">Try adjusting your search or filters</div></div></td></tr>';
+        return;
+      }
+
+      var html = '';
+      filtered.forEach(function (row) {
+        html += '<tr data-client-id="' + row.client_id + '" data-project-id="' + (row.project_id || '') + '">';
+        html += '<td>' + escapeHtml(row.name) + '</td>';
+        html += '<td>' + escapeHtml(row.company || '—') + '</td>';
+        html += '<td>' + escapeHtml(row.project_name) + '</td>';
+        html += '<td>' + (row.status ? '<span class="' + statusBadgeClass(row.status) + '">' + escapeHtml(row.status) + '</span>' : '—') + '</td>';
+        html += '<td>' + (row.priority ? '<span class="' + priorityBadgeClass(row.priority) + '">' + escapeHtml(row.priority) + '</span>' : '—') + '</td>';
+        html += '<td><span class="progress-bar-mini"><span class="progress-bar-mini-fill" style="width:' + (row.progress || 0) + '%"></span></span>' + (row.progress || 0) + '%</td>';
+        html += '<td>' + formatDate(row.deadline) + '</td>';
+        html += '<td>' + (row.payment_status ? '<span class="' + paymentBadgeClass(row.payment_status) + '">' + escapeHtml(row.payment_status) + '</span>' : '—') + '</td>';
+        html += '</tr>';
+      });
+      clientsBody.innerHTML = html;
+    }
+
+    // ── Table Events ──
+    searchInput.addEventListener('input', renderTable);
+    filterStatus.addEventListener('change', renderTable);
+    filterPriority.addEventListener('change', renderTable);
+
+    // Sort headers
+    document.querySelectorAll('#clientsTable thead th[data-sort]').forEach(function (th) {
+      th.addEventListener('click', function () {
+        var col = th.getAttribute('data-sort');
+        if (sortCol === col) {
+          sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortCol = col;
+          sortDir = 'asc';
+        }
+        // Update arrow indicators
+        document.querySelectorAll('#clientsTable thead th').forEach(function (h) {
+          h.classList.remove('sorted');
+          h.querySelector('.sort-arrow').innerHTML = '&#9650;';
+        });
+        th.classList.add('sorted');
+        th.querySelector('.sort-arrow').innerHTML = sortDir === 'asc' ? '&#9650;' : '&#9660;';
+        renderTable();
+      });
+    });
+
+    // Row click -> open detail
+    clientsBody.addEventListener('click', function (e) {
+      var tr = e.target.closest('tr');
+      if (!tr) return;
+      var clientId = tr.getAttribute('data-client-id');
+      var projectId = tr.getAttribute('data-project-id');
+      if (clientId) openDetail(clientId, projectId);
+    });
+
+    // ── Modal: Add / Edit ──
+    addClientBtn.addEventListener('click', function () {
+      editingClientId = null;
+      editingProjectId = null;
+      modalTitle.textContent = 'Add New Client';
+      modalSave.textContent = 'Save Client';
+      clientForm.reset();
+      fProgress.value = 0;
+      fProgressVal.textContent = '0%';
+      // Reset priority to Medium
+      $('fPriority').value = 'Medium';
+      clientModal.classList.add('active');
+    });
+
+    modalClose.addEventListener('click', closeModal);
+    modalCancel.addEventListener('click', closeModal);
+    clientModal.addEventListener('click', function (e) {
+      if (e.target === clientModal) closeModal();
+    });
+
+    function closeModal() { clientModal.classList.remove('active'); }
+
+    fProgress.addEventListener('input', function () {
+      fProgressVal.textContent = fProgress.value + '%';
+    });
+
+    modalSave.addEventListener('click', async function () {
+      if (!clientForm.checkValidity()) {
+        clientForm.reportValidity();
+        return;
+      }
+      modalSave.disabled = true;
+      modalSave.textContent = 'Saving...';
+
+      try {
+        var clientData = {
+          name: $('fName').value.trim(),
+          email: $('fEmail').value.trim(),
+          phone: $('fPhone').value.trim(),
+          company: $('fCompany').value.trim()
+        };
+
+        var projectData = {
+          project_name: $('fProject').value.trim(),
+          project_type: $('fType').value,
+          status: $('fStatus').value,
+          priority: $('fPriority').value,
+          progress: parseInt(fProgress.value, 10),
+          start_date: $('fStart').value || null,
+          deadline: $('fDeadline').value || null,
+          budget: parseFloat($('fBudget').value) || 0,
+          amount_paid: parseFloat($('fAmountPaid').value) || 0,
+          payment_status: $('fPayment').value,
+          invoice_link: $('fInvoice').value.trim(),
+          file_links: $('fFiles').value.trim()
+        };
+
+        if (editingClientId) {
+          // Update existing
+          var { error: cErr } = await db.from('clients').update(clientData).eq('id', editingClientId);
+          if (cErr) throw cErr;
+
+          if (editingProjectId) {
+            var { error: pErr } = await db.from('projects').update(projectData).eq('id', editingProjectId);
+            if (pErr) throw pErr;
+          } else {
+            projectData.client_id = editingClientId;
+            var { error: pErr2 } = await db.from('projects').insert(projectData);
+            if (pErr2) throw pErr2;
+          }
+          toast('Client updated successfully');
+        } else {
+          // Insert new
+          var { data: newClient, error: cErr2 } = await db.from('clients').insert(clientData).select().single();
+          if (cErr2) throw cErr2;
+          projectData.client_id = newClient.id;
+          var { error: pErr3 } = await db.from('projects').insert(projectData);
+          if (pErr3) throw pErr3;
+          toast('Client added successfully');
+        }
+
+        closeModal();
+        await loadData();
+      } catch (err) {
+        toast('Error: ' + err.message, 'error');
+      }
+
+      modalSave.disabled = false;
+      modalSave.textContent = editingClientId ? 'Update Client' : 'Save Client';
+    });
+
+    // ── Detail Panel ──
+    async function openDetail(clientId, projectId) {
+      currentDetail = { clientId: clientId, projectId: projectId };
+
+      // Find client data from allData
+      var row = allData.find(function (r) {
+        return r.client_id === clientId && (projectId ? r.project_id === projectId : true);
+      });
+      if (!row) return;
+
+      detailName.textContent = row.name;
+
+      // Load notes for this project
+      var notes = [];
+      if (projectId) {
+        var { data, error } = await db.from('update_notes').select('*').eq('project_id', projectId).order('created_at', { ascending: false });
+        if (!error && data) notes = data;
+      }
+
+      // Build status link
+      var statusLink = window.location.origin + window.location.pathname.replace('admin.html', 'status.html') + '?email=' + encodeURIComponent(row.email);
+
+      var html = '';
+
+      // Client info section
+      html += '<div class="detail-section">';
+      html += '<div class="detail-section-title">Client Information</div>';
+      html += '<div class="detail-row"><span class="detail-row-label">Name</span><span class="detail-row-value">' + escapeHtml(row.name) + '</span></div>';
+      html += '<div class="detail-row"><span class="detail-row-label">Email</span><span class="detail-row-value">' + escapeHtml(row.email) + '</span></div>';
+      html += '<div class="detail-row"><span class="detail-row-label">Phone</span><span class="detail-row-value">' + escapeHtml(row.phone || '—') + '</span></div>';
+      html += '<div class="detail-row"><span class="detail-row-label">Company</span><span class="detail-row-value">' + escapeHtml(row.company || '—') + '</span></div>';
+      html += '</div>';
+
+      // Project section
+      if (row.project_id) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">Project Details</div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Project</span><span class="detail-row-value">' + escapeHtml(row.project_name) + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Type</span><span class="detail-row-value">' + escapeHtml(row.project_type) + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Status</span><span class="detail-row-value"><span class="' + statusBadgeClass(row.status) + '">' + escapeHtml(row.status) + '</span></span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Priority</span><span class="detail-row-value"><span class="' + priorityBadgeClass(row.priority) + '">' + escapeHtml(row.priority) + '</span></span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Start Date</span><span class="detail-row-value">' + formatDate(row.start_date) + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Deadline</span><span class="detail-row-value">' + formatDate(row.deadline) + '</span></div>';
+
+        // Progress bar
+        html += '<div style="margin-top:12px">';
+        html += '<div class="detail-row"><span class="detail-row-label">Progress</span><span class="detail-row-value">' + row.progress + '%</span></div>';
+        html += '<div class="progress-bar"><div class="progress-bar-fill" style="width:' + row.progress + '%"></div></div>';
+        html += '</div>';
+        html += '</div>';
+
+        // Financials
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">Financials</div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Budget</span><span class="detail-row-value">' + formatCurrency(row.budget) + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Amount Paid</span><span class="detail-row-value">' + formatCurrency(row.amount_paid) + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-row-label">Payment Status</span><span class="detail-row-value"><span class="' + paymentBadgeClass(row.payment_status) + '">' + escapeHtml(row.payment_status) + '</span></span></div>';
+        if (row.invoice_link) {
+          html += '<div class="detail-row"><span class="detail-row-label">Invoice</span><span class="detail-row-value"><a href="' + escapeHtml(row.invoice_link) + '" target="_blank" rel="noopener" style="color:var(--gold)">View Invoice</a></span></div>';
+        }
+        if (row.file_links) {
+          html += '<div class="detail-row"><span class="detail-row-label">Files</span><span class="detail-row-value" style="font-size:0.8rem;word-break:break-all">' + escapeHtml(row.file_links) + '</span></div>';
+        }
+        html += '</div>';
+
+        // Status Link
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">Client Status Link</div>';
+        html += '<p style="font-size:0.82rem;color:var(--gray-400);margin-bottom:8px">Share this link with the client so they can check their project status:</p>';
+        html += '<div class="status-link-box"><input type="text" readonly value="' + escapeHtml(statusLink) + '" id="statusLinkInput"><button onclick="document.getElementById(\'statusLinkInput\').select();document.execCommand(\'copy\');this.textContent=\'Copied!\';setTimeout(function(){this.textContent=\'Copy\';}.bind(this),2000);">Copy</button></div>';
+        html += '</div>';
+
+        // Notes timeline
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">Update Notes</div>';
+        html += '<div class="add-note-form">';
+        html += '<textarea id="newNoteText" placeholder="Add a note..." rows="2"></textarea>';
+        html += '<button class="btn btn-primary btn-sm" id="addNoteBtn">Add</button>';
+        html += '</div>';
+        html += '<div class="notes-timeline" id="notesTimeline">';
+        if (notes.length === 0) {
+          html += '<p style="font-size:0.82rem;color:var(--gray-400);padding:16px 0">No notes yet.</p>';
+        } else {
+          notes.forEach(function (n) {
+            html += '<div class="note-item">';
+            html += '<div class="note-date">' + formatTimestamp(n.created_at) + '</div>';
+            html += '<div class="note-text">' + escapeHtml(n.note) + '</div>';
+            html += '</div>';
+          });
+        }
+        html += '</div>';
+        html += '</div>';
+      }
+
+      detailBody.innerHTML = html;
+
+      // Bind add note button
+      var addNoteBtn = document.getElementById('addNoteBtn');
+      if (addNoteBtn) {
+        addNoteBtn.addEventListener('click', async function () {
+          var noteText = document.getElementById('newNoteText');
+          if (!noteText || !noteText.value.trim()) return;
+          addNoteBtn.disabled = true;
+          addNoteBtn.textContent = '...';
+          try {
+            var { error } = await db.from('update_notes').insert({
+              project_id: projectId,
+              note: noteText.value.trim()
+            });
+            if (error) throw error;
+            toast('Note added');
+            openDetail(clientId, projectId);
+          } catch (err) {
+            toast('Error: ' + err.message, 'error');
+          }
+          addNoteBtn.disabled = false;
+          addNoteBtn.textContent = 'Add';
+        });
+      }
+
+      // Show panel
+      detailPanel.classList.add('active');
+      detailOverlay.classList.add('active');
+    }
+
+    function closeDetail() {
+      detailPanel.classList.remove('active');
+      detailOverlay.classList.remove('active');
+      currentDetail = null;
+    }
+
+    detailClose.addEventListener('click', closeDetail);
+    detailOverlay.addEventListener('click', closeDetail);
+
+    // Edit button in detail
+    detailEdit.addEventListener('click', function () {
+      if (!currentDetail) return;
+      var row = allData.find(function (r) {
+        return r.client_id === currentDetail.clientId &&
+          (currentDetail.projectId ? r.project_id === currentDetail.projectId : true);
+      });
+      if (!row) return;
+
+      editingClientId = row.client_id;
+      editingProjectId = row.project_id;
+      modalTitle.textContent = 'Edit Client';
+      modalSave.textContent = 'Update Client';
+
+      $('fName').value = row.name;
+      $('fEmail').value = row.email;
+      $('fPhone').value = row.phone || '';
+      $('fCompany').value = row.company || '';
+      $('fProject').value = row.project_name || '';
+      $('fType').value = row.project_type || 'Website';
+      $('fStatus').value = row.status || 'New';
+      $('fPriority').value = row.priority || 'Medium';
+      fProgress.value = row.progress || 0;
+      fProgressVal.textContent = (row.progress || 0) + '%';
+      $('fStart').value = row.start_date || '';
+      $('fDeadline').value = row.deadline || '';
+      $('fBudget').value = row.budget || '';
+      $('fAmountPaid').value = row.amount_paid || '';
+      $('fPayment').value = row.payment_status || 'Unpaid';
+      $('fInvoice').value = row.invoice_link || '';
+      $('fFiles').value = row.file_links || '';
+
+      closeDetail();
+      clientModal.classList.add('active');
+    });
+
+    // ── Keyboard shortcut: Escape closes modals ──
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        if (clientModal.classList.contains('active')) closeModal();
+        if (detailPanel.classList.contains('active')) closeDetail();
+      }
+    });
+
+    // ── Init ──
+    if (!db) {
+      loginScreen.innerHTML = '<div class="login-card"><div class="login-logo">W.</div><div class="login-subtitle" style="color:var(--red)">Supabase is not configured. Set window.__SUPABASE_URL__ and window.__SUPABASE_KEY__ in admin.html before the script tags.</div></div>';
+      loginScreen.style.display = 'flex';
+    } else {
+      checkAuth();
+    }
+
+  })();
+  </script>
+</body>
+</html>
