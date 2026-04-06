@@ -30,38 +30,12 @@ const observer = new IntersectionObserver((entries) => {
 reveals.forEach(el => observer.observe(el));
 
 // ══════════════════════════════════════════════════════
-// SECTION 2: Mobile Menu (unchanged functionality)
+// SECTION 2: Sticky Bottom Bar on Scroll
 // ══════════════════════════════════════════════════════
-const toggle = document.getElementById('menuToggle');
-const mobileMenu = document.getElementById('mobileMenu');
-
-toggle.addEventListener('click', () => {
-  toggle.classList.toggle('active');
-  mobileMenu.classList.toggle('open');
-});
-
-mobileMenu.querySelectorAll('a').forEach(link => {
-  link.addEventListener('click', () => {
-    toggle.classList.remove('active');
-    mobileMenu.classList.remove('open');
-  });
-});
-
-// ══════════════════════════════════════════════════════
-// SECTION 3: Nav + Sticky Bottom Bar on Scroll
-// ══════════════════════════════════════════════════════
-const nav = document.getElementById('nav');
 const bottomBar = document.getElementById('bottomBar');
 
 window.addEventListener('scroll', () => {
   const scrollY = window.scrollY;
-
-  // Nav border intensity on scroll
-  if (scrollY > 60) {
-    nav.style.borderBottomColor = 'rgba(201,168,76,0.15)';
-  } else {
-    nav.style.borderBottomColor = 'rgba(201,168,76,0.06)';
-  }
 
   // Show/hide sticky bottom bar after scrolling past hero
   if (bottomBar) {
