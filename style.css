@@ -78,6 +78,76 @@ ul { list-style: none; }
   50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
 }
 
+/* ══ Custom Cursor ══ */
+.cursor {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid rgba(201, 168, 76, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s;
+  mix-blend-mode: difference;
+}
+
+.cursor-dot {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+}
+
+.cursor-glow {
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(201, 168, 76, 0.07) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.4s;
+}
+
+/* Cursor hover states */
+.cursor.hover {
+  width: 64px;
+  height: 64px;
+  border-color: var(--gold);
+  background: rgba(201, 168, 76, 0.08);
+}
+
+.cursor.clicking {
+  width: 32px;
+  height: 32px;
+  border-color: var(--gold-light);
+}
+
+.cursor.text-hover {
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+  border-color: var(--gold);
+  background: rgba(201, 168, 76, 0.15);
+}
+
+/* Hide custom cursor on touch devices */
+@media (hover: none) {
+  .cursor, .cursor-dot, .cursor-glow { display: none; }
+}
+
+/* Hide default cursor when custom cursor is active */
+@media (hover: hover) {
+  body { cursor: none; }
+  a, button, input, textarea, select { cursor: none; }
+}
+
 /* Ensure all content sits above the grid */
 .nav, .mobile-menu, .hero, .section, .footer, .bottom-bar {
   position: relative;
@@ -226,8 +296,11 @@ ul { list-style: none; }
   transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
 }
 
-.btn:hover { transform: translateY(-1px); }
-.btn:active { transform: scale(0.98); }
+.btn {
+  transition: transform 0.25s cubic-bezier(.25,.46,.45,.94), opacity 0.2s, box-shadow 0.2s;
+}
+
+.btn:active { transform: scale(0.95); }
 
 .btn-primary { background: var(--gold); color: var(--black); }
 .btn-primary:hover { box-shadow: 0 8px 30px rgba(201, 168, 76, 0.25); }

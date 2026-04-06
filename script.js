@@ -48,6 +48,163 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 // ══════════════════════════════════════════════════════
+// SECTION 3: Custom Cursor + Interactions
+// Adds: glowing cursor, magnetic buttons, grid spotlight
+// ══════════════════════════════════════════════════════
+(function() {
+  // Skip on touch-only devices
+  if (!window.matchMedia('(hover: hover)').matches) return;
+
+  const cursor = document.getElementById('cursor');
+  const dot = document.getElementById('cursorDot');
+  const glow = document.getElementById('cursorGlow');
+  if (!cursor || !dot || !glow) return;
+
+  let mouseX = 0, mouseY = 0;
+  let cursorX = 0, cursorY = 0;
+  let dotX = 0, dotY = 0;
+  let glowX = 0, glowY = 0;
+  let isHovering = false;
+
+  // Track mouse position
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  }, { passive: true });
+
+  // Smooth follow animation loop
+  function animate() {
+    // Outer ring — smooth lag
+    cursorX += (mouseX - cursorX) * 0.12;
+    cursorY += (mouseY - cursorY) * 0.12;
+    cursor.style.left = cursorX + 'px';
+    cursor.style.top = cursorY + 'px';
+
+    // Inner dot — fast follow
+    dotX += (mouseX - dotX) * 0.6;
+    dotY += (mouseY - dotY) * 0.6;
+    dot.style.left = dotX + 'px';
+    dot.style.top = dotY + 'px';
+
+    // Glow — very slow follow for ambient effect
+    glowX += (mouseX - glowX) * 0.05;
+    glowY += (mouseY - glowY) * 0.05;
+    glow.style.left = glowX + 'px';
+    glow.style.top = glowY + 'px';
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // ── Hover detection for interactive elements ──
+  const interactiveSelectors = 'a, button, .btn, .card, .process-card, .stat-card, .cta-card, .bottom-pill';
+  const inputSelectors = 'input, textarea';
+
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest(interactiveSelectors);
+    const inputTarget = e.target.closest(inputSelectors);
+
+    if (inputTarget) {
+      cursor.classList.add('text-hover');
+      cursor.classList.remove('hover');
+      dot.style.opacity = '0';
+    } else if (target) {
+      cursor.classList.add('hover');
+      cursor.classList.remove('text-hover');
+      dot.style.opacity = '1';
+      isHovering = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('mouseout', (e) => {
+    const target = e.target.closest(interactiveSelectors);
+    const inputTarget = e.target.closest(inputSelectors);
+
+    if (target || inputTarget) {
+      cursor.classList.remove('hover', 'text-hover');
+      dot.style.opacity = '1';
+      isHovering = false;
+    }
+  }, { passive: true });
+
+  // ── Click feedback ──
+  document.addEventListener('mousedown', () => {
+    cursor.classList.add('clicking');
+  });
+  document.addEventListener('mouseup', () => {
+    cursor.classList.remove('clicking');
+  });
+
+  // ── Magnetic effect on buttons ──
+  const magneticEls = document.querySelectorAll('.btn, .bottom-pill, .nav-cta');
+  const MAGNETIC_STRENGTH = 0.3;
+  const MAGNETIC_DISTANCE = 120;
+
+  magneticEls.forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const distX = e.clientX - centerX;
+      const distY = e.clientY - centerY;
+      const dist = Math.sqrt(distX * distX + distY * distY);
+
+      if (dist < MAGNETIC_DISTANCE) {
+        const pullX = distX * MAGNETIC_STRENGTH;
+        const pullY = distY * MAGNETIC_STRENGTH;
+        el.style.transform = `translate(${pullX}px, ${pullY}px)`;
+      }
+    }, { passive: true });
+
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = '';
+    }, { passive: true });
+  });
+
+  // ── Card tilt effect (3D) ──
+  const tiltCards = document.querySelectorAll('.card, .process-card, .stat-card, .cta-card');
+  const TILT_MAX = 8; // degrees
+
+  tiltCards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const rotateX = (0.5 - y) * TILT_MAX;
+      const rotateY = (x - 0.5) * TILT_MAX;
+
+      card.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+    }, { passive: true });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    }, { passive: true });
+  });
+
+  // ── Grid spotlight — brighten grid lines near cursor ──
+  const gridLines = document.querySelector('.grid-bg-lines');
+  if (gridLines) {
+    document.addEventListener('mousemove', (e) => {
+      gridLines.style.maskImage = `radial-gradient(circle 250px at ${e.clientX}px ${e.clientY}px, rgba(0,0,0,1) 0%, rgba(0,0,0,0.15) 100%)`;
+      gridLines.style.webkitMaskImage = `radial-gradient(circle 250px at ${e.clientX}px ${e.clientY}px, rgba(0,0,0,1) 0%, rgba(0,0,0,0.15) 100%)`;
+    }, { passive: true });
+  }
+
+  // ── Hide cursor when leaving window ──
+  document.addEventListener('mouseleave', () => {
+    cursor.style.opacity = '0';
+    dot.style.opacity = '0';
+    glow.style.opacity = '0';
+  });
+
+  document.addEventListener('mouseenter', () => {
+    cursor.style.opacity = '1';
+    dot.style.opacity = '1';
+    glow.style.opacity = '1';
+  });
+})();
+
+// ══════════════════════════════════════════════════════
 // SECTION 4: Smooth Anchor Scroll (HARDENED)
 // SECURITY: Prevent selector injection — only allow
 // href values that match #[a-zA-Z0-9_-]+ pattern
