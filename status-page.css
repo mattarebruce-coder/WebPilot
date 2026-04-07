@@ -397,6 +397,102 @@ a { color: inherit; text-decoration: none; }
   color: var(--white);
 }
 
+/* ══ Payment Section ══ */
+.payment-section {
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(201, 168, 76, 0.03) 100%);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.payment-info {
+  margin-bottom: 20px;
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  color: var(--gray-300);
+}
+
+.payment-row.payment-owed {
+  border-top: 1px solid rgba(201, 168, 76, 0.15);
+  margin-top: 8px;
+  padding-top: 14px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.payment-row.payment-owed .payment-label {
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.78rem;
+}
+
+.payment-row.payment-owed .payment-value {
+  color: var(--white);
+  font-size: 1.3rem;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.payment-label {
+  color: var(--gray-400);
+  font-weight: 500;
+}
+
+.payment-value {
+  color: var(--white);
+  font-weight: 600;
+}
+
+.payment-paid {
+  color: var(--green);
+}
+
+.pay-now-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: var(--gradient);
+  color: var(--black);
+  padding: 16px 28px;
+  border-radius: 980px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: box-shadow 0.2s, transform 0.2s;
+  box-shadow: 0 4px 20px rgba(201, 168, 76, 0.15);
+}
+
+.pay-now-btn:hover {
+  box-shadow: 0 8px 32px rgba(201, 168, 76, 0.3);
+  transform: translateY(-1px);
+}
+
+.pay-now-btn:active {
+  transform: translateY(0);
+}
+
+.pay-pending {
+  text-align: center;
+  padding: 14px;
+  font-size: 0.85rem;
+  color: var(--gray-400);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-sm);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
 /* ══ Updates Timeline ══ */
 .updates-section {
   padding: 24px 28px;

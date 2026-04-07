@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" crossorigin="anonymous">
-  <link rel="stylesheet" href="status-page.css?v=6">
+  <link rel="stylesheet" href="status-page.css?v=7">
 
   <!-- SECURITY: Content Security Policy (OWASP A05:2021 — Security Misconfiguration)
        - 'unsafe-inline' for scripts: required for inline app logic; TODO: move to external .js file to remove
@@ -80,8 +80,8 @@
   <!-- ══ Scripts ══ -->
   <!-- SECURITY: Keys are centralized in supabase-config.js (single source of truth) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="security.js?v=6"></script>
-  <script src="supabase-config.js?v=6"></script>
+  <script src="security.js?v=7"></script>
+  <script src="supabase-config.js?v=7"></script>
 
   <script>
   (function () {
@@ -228,6 +228,32 @@
             html += '<div class="info-item"><div class="info-item-label">Payment Status</div><div class="info-item-value"><span class="' + paymentBadgeClass(p.payment_status) + '">' + escapeHtml(p.payment_status) + '</span></div></div>';
             html += '<div class="info-item"><div class="info-item-label">Project Type</div><div class="info-item-value">' + escapeHtml(p.project_type) + '</div></div>';
             html += '</div>';
+
+            // Payment section — show outstanding balance + Pay Now button
+            var budget = Number(p.budget || 0);
+            var paid = Number(p.amount_paid || 0);
+            var owed = Math.max(0, budget - paid);
+            var isUnpaid = p.payment_status === 'Unpaid' || p.payment_status === 'Partial';
+
+            if (budget > 0 && isUnpaid) {
+              html += '<div class="payment-section">';
+              html += '<div class="payment-info">';
+              html += '<div class="payment-row"><span class="payment-label">Total</span><span class="payment-value">$' + budget.toLocaleString() + '</span></div>';
+              if (paid > 0) {
+                html += '<div class="payment-row"><span class="payment-label">Paid</span><span class="payment-value payment-paid">$' + paid.toLocaleString() + '</span></div>';
+              }
+              html += '<div class="payment-row payment-owed"><span class="payment-label">Amount Due</span><span class="payment-value">$' + owed.toLocaleString() + '</span></div>';
+              html += '</div>';
+
+              // SECURITY: Only render Pay Now button if invoice_link is a valid http(s) URL
+              var safeLink = SEC.sanitizeUrl(p.invoice_link || '');
+              if (safeLink) {
+                html += '<a href="' + escapeHtml(safeLink) + '" class="pay-now-btn" target="_blank" rel="noopener noreferrer">Pay $' + owed.toLocaleString() + ' Now</a>';
+              } else {
+                html += '<div class="pay-pending">Payment link not yet available. Contact us for an invoice.</div>';
+              }
+              html += '</div>';
+            }
 
             html += '</div>';
 
