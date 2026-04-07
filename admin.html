@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" crossorigin="anonymous">
-  <link rel="stylesheet" href="admin.css?v=6">
+  <link rel="stylesheet" href="admin.css?v=7">
 
   <!-- SECURITY: Content Security Policy (OWASP A05:2021 — Security Misconfiguration)
        - 'unsafe-inline' for scripts: required for inline app logic; TODO: move to external .js file to remove
@@ -247,6 +247,7 @@
       <div class="detail-header-title" id="detailName">Client Name</div>
       <div class="detail-header-actions">
         <button class="btn btn-ghost btn-sm" id="detailEdit">Edit</button>
+        <button class="btn btn-danger btn-sm" id="detailDelete">Delete</button>
         <button class="modal-close" id="detailClose">&times;</button>
       </div>
     </div>
@@ -261,8 +262,8 @@
   <!-- ══ Scripts ══ -->
   <!-- SECURITY: Keys are centralized in supabase-config.js (single source of truth) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="security.js?v=6"></script>
-  <script src="supabase-config.js?v=6"></script>
+  <script src="security.js?v=7"></script>
+  <script src="supabase-config.js?v=7"></script>
 
   <script>
   (function () {
@@ -293,6 +294,7 @@
     var detailOverlay = document.getElementById('detailOverlay');
     var detailClose = document.getElementById('detailClose');
     var detailEdit = document.getElementById('detailEdit');
+    var detailDelete = document.getElementById('detailDelete');
     var detailName = document.getElementById('detailName');
     var detailBody = document.getElementById('detailBody');
     var toastContainer = document.getElementById('toastContainer');
@@ -315,6 +317,8 @@
     var saveLimiter = new SEC.RateLimiter('admin_save', 20, 5 * 60 * 1000);
     // Note add: 30 per 5 minutes
     var noteLimiter = new SEC.RateLimiter('admin_note', 30, 5 * 60 * 1000);
+    // Delete: 10 per 5 minutes — prevents accidental mass deletion
+    var deleteLimiter = new SEC.RateLimiter('admin_delete', 10, 5 * 60 * 1000);
 
     // SECURITY: Validation schemas (OWASP A03:2021 — Injection)
     var LOGIN_SCHEMA = {
@@ -955,6 +959,38 @@
 
       closeDetail();
       clientModal.classList.add('active');
+    });
+
+    // Delete button in detail — removes client + cascades to projects/notes
+    detailDelete.addEventListener('click', async function () {
+      if (!currentDetail) return;
+
+      // SECURITY: Rate limit deletes
+      var rlCheck = deleteLimiter.check();
+      if (!rlCheck.allowed) {
+        toast(SEC.formatRetryMessage(rlCheck.retryAfter), 'error');
+        return;
+      }
+
+      var row = allData.find(function (r) {
+        return r.client_id === currentDetail.clientId;
+      });
+      if (!row) return;
+
+      if (!confirm('Permanently delete ' + row.name + '?\n\nThis will also delete ALL their projects and update notes. This cannot be undone.')) {
+        return;
+      }
+
+      try {
+        var res = await db.from('clients').delete().eq('id', currentDetail.clientId);
+        if (res.error) throw res.error;
+        toast('Client deleted');
+        closeDetail();
+        await loadData();
+      } catch (err) {
+        toast('Error: ' + (err.message || 'Failed to delete'), 'error');
+        console.error('[WebPilot Admin] delete error', err);
+      }
     });
 
     // ── Keyboard shortcut: Escape closes modals ──
